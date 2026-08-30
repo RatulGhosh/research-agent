@@ -1,7 +1,6 @@
 # ResearchAgents
 
-A multi-agent LLM review board for research ideas, modeled on
-[TradingAgents](https://github.com/TauricResearch/TradingAgents). You give it a
+A multi-agent LLM review board for research ideas. You give it a
 high-level research idea plus the resources you actually have (GPUs, time,
 data, team, budget); a board of specialist agents analyzes it, debates it, and
 returns a final recommendation — **PURSUE**, **PURSUE WITH MODIFICATIONS**, or
@@ -37,9 +36,11 @@ problem and a staged resource plan.
                           └─────────────────────┘
 ```
 
-- **Analysts** produce structured reports. The Novelty Analyst runs live
-  arXiv searches (no API key required) to ground its assessment in real
-  literature.
+- **Analysts** produce structured reports. The Novelty Analyst grounds its
+  assessment in real literature via two tools: live arXiv search (no API key
+  required) and provider-native web search (OpenAI's Responses API `web_search`
+  tool or Claude's server-side web search) for very recent results, published
+  venue versions, lab blog posts, and open-source projects.
 - **Advocate vs. Critic** debate the idea's merit over configurable rounds;
   the **Research Manager** judges the debate and rewrites the research problem
   to keep what survived scrutiny.
@@ -60,9 +61,10 @@ pip install -e ".[dev]"
 cp .env.example .env   # then fill in credentials
 ```
 
-Default provider is Oracle-hosted ChatGPT (set `ORACLE_OPENAI_USERNAME` /
-`ORACLE_OPENAI_PASSWORD` in `.env`). Standard OpenAI, Anthropic, and Google
-providers are also supported via `config["llm_provider"]`.
+Default provider is OpenAI (set `OPENAI_API_KEY` in `.env`). Anthropic/Claude
+is fully supported via `ANTHROPIC_API_KEY`; Google and Oracle-hosted ChatGPT
+also work. Every role can use a different provider and model — see
+Configuration below.
 
 ## Usage
 
@@ -109,13 +111,52 @@ Key options in `researchagents/default_config.py`:
 
 | Option | Default | Meaning |
 | --- | --- | --- |
-| `llm_provider` | `oracle` | `oracle`, `openai`, `anthropic`, `google`, ... |
-| `deep_think_llm` | `caa-gpt-5.4` | Model for the two judges |
-| `quick_think_llm` | `caa-gpt-5-mini` | Model for analysts and debaters |
-| `max_debate_rounds` | `2` | Advocate/critic back-and-forth rounds |
-| `max_scope_rounds` | `1` | Scoping-team rounds |
-| `max_lit_search_calls` | `4` | arXiv tool-call budget for the Novelty Analyst |
+| `llm_provider` | `openai` | `openai`, `anthropic`, `google`, `oracle`, ... |
+| `deep_think_llm` | `gpt-5.2` | Default model for the two judges |
+| `quick_think_llm` | `gpt-5-mini` | Default model for analysts and debaters |
+| `role_llms` | `{}` | Per-role provider/model overrides (see below) |
+| `web_search` | enabled, `openai` | Web search tool for the Novelty Analyst |
+| `max_debate_rounds` | `5` | Advocate/critic back-and-forth rounds |
+| `max_scope_rounds` | `3` | Scoping-team rounds |
+| `max_lit_search_calls` | `10` | Search tool-call budget for the Novelty Analyst |
 | `results_dir` | `~/.researchagents/results` | Where reports are written |
+
+### Per-role LLMs
+
+Any of the eleven roles can run on its own provider and model. Roles not
+listed fall back to `deep_think_llm` (Research Manager, Program Director) or
+`quick_think_llm` (everyone else):
+
+```python
+config["role_llms"] = {
+    "Critic":           {"provider": "anthropic", "model": "claude-opus-5"},
+    "Research Manager": {"provider": "anthropic", "model": "claude-opus-5"},
+    "Program Director": {"provider": "anthropic", "model": "claude-opus-5"},
+    "Novelty Analyst":  {"provider": "openai",    "model": "gpt-5.2"},
+}
+```
+
+Valid role names: `Novelty Analyst`, `Feasibility Analyst`, `Impact Analyst`,
+`Methodology Analyst`, `Advocate`, `Critic`, `Research Manager`,
+`Ambitious Scoper`, `Conservative Scoper`, `Pragmatic Scoper`,
+`Program Director`. Identical provider/model specs share one client instance.
+
+### Web search
+
+The Novelty Analyst gets a `web_search` tool alongside arXiv, backed by the
+LLM provider's native search — no separate search-API key needed:
+
+```python
+config["web_search"] = {
+    "enabled": True,
+    "provider": "openai",     # "openai" (Responses API) or "anthropic" (Claude server-side)
+    "model": None,             # None -> gpt-5.2 / claude-opus-5
+    "max_uses": 3,             # searches per query (anthropic provider)
+}
+```
+
+If the search call fails (e.g. missing key), the tool returns an error string
+and the review degrades gracefully to arXiv-only.
 
 ## Tests
 

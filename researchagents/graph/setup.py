@@ -19,15 +19,23 @@ from researchagents.graph.conditional_logic import ConditionalLogic
 class GraphSetup:
     """Builds the research review board graph."""
 
-    def __init__(self, quick_thinking_llm, deep_thinking_llm, tools, config):
+    def __init__(self, quick_thinking_llm, deep_thinking_llm, tools, config, role_llms=None):
         self.quick_thinking_llm = quick_thinking_llm
         self.deep_thinking_llm = deep_thinking_llm
         self.tools = tools
         self.config = config
+        # Per-role LLM overrides: {node name: llm}. Roles without an entry use
+        # the tier default passed to _llm().
+        self.role_llms = role_llms or {}
         self.conditional_logic = ConditionalLogic(
             max_debate_rounds=config["max_debate_rounds"],
             max_scope_rounds=config["max_scope_rounds"],
         )
+
+    def _llm(self, role, tier="quick"):
+        if role in self.role_llms:
+            return self.role_llms[role]
+        return self.deep_thinking_llm if tier == "deep" else self.quick_thinking_llm
 
     def setup_graph(self):
         workflow = StateGraph(AgentState)
@@ -36,35 +44,35 @@ class GraphSetup:
         workflow.add_node(
             "Novelty Analyst",
             create_novelty_analyst(
-                self.quick_thinking_llm,
+                self._llm("Novelty Analyst"),
                 self.tools,
                 max_search_calls=self.config["max_lit_search_calls"],
             ),
         )
         workflow.add_node("tools_novelty", ToolNode(self.tools))
         workflow.add_node(
-            "Feasibility Analyst", create_feasibility_analyst(self.quick_thinking_llm)
+            "Feasibility Analyst", create_feasibility_analyst(self._llm("Feasibility Analyst"))
         )
-        workflow.add_node("Impact Analyst", create_impact_analyst(self.quick_thinking_llm))
+        workflow.add_node("Impact Analyst", create_impact_analyst(self._llm("Impact Analyst")))
         workflow.add_node(
-            "Methodology Analyst", create_methodology_analyst(self.quick_thinking_llm)
+            "Methodology Analyst", create_methodology_analyst(self._llm("Methodology Analyst"))
         )
 
         # Advocate/critic debate + judge
-        workflow.add_node("Advocate", create_advocate(self.quick_thinking_llm))
-        workflow.add_node("Critic", create_critic(self.quick_thinking_llm))
+        workflow.add_node("Advocate", create_advocate(self._llm("Advocate")))
+        workflow.add_node("Critic", create_critic(self._llm("Critic")))
         workflow.add_node(
-            "Research Manager", create_research_manager(self.deep_thinking_llm)
+            "Research Manager", create_research_manager(self._llm("Research Manager", tier="deep"))
         )
 
         # Scoping debate + final judge
-        workflow.add_node("Ambitious Scoper", create_ambitious_scoper(self.quick_thinking_llm))
+        workflow.add_node("Ambitious Scoper", create_ambitious_scoper(self._llm("Ambitious Scoper")))
         workflow.add_node(
-            "Conservative Scoper", create_conservative_scoper(self.quick_thinking_llm)
+            "Conservative Scoper", create_conservative_scoper(self._llm("Conservative Scoper"))
         )
-        workflow.add_node("Pragmatic Scoper", create_pragmatic_scoper(self.quick_thinking_llm))
+        workflow.add_node("Pragmatic Scoper", create_pragmatic_scoper(self._llm("Pragmatic Scoper")))
         workflow.add_node(
-            "Program Director", create_program_director(self.deep_thinking_llm)
+            "Program Director", create_program_director(self._llm("Program Director", tier="deep"))
         )
 
         # Edges

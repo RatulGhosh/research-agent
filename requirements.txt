@@ -1,6 +1,9 @@
+anthropic>=1.0
+langchain-anthropic>=0.2
 langchain-core>=0.3
 langchain-openai>=0.2
 langgraph>=0.2
+openai>=1.60
 python-dotenv>=1.0
 requests>=2.31
 typing-extensions>=4.9

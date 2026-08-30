@@ -3,15 +3,26 @@ from dotenv import load_dotenv
 from researchagents.default_config import DEFAULT_CONFIG
 from researchagents.graph.research_graph import ResearchAgentsGraph
 
-# Load environment variables from .env file
+# Load environment variables from .env file (OPENAI_API_KEY, ANTHROPIC_API_KEY, ...)
 load_dotenv()
 
 # Create a custom config
 config = DEFAULT_CONFIG.copy()
-config["llm_provider"] = "oracle"       # Oracle-hosted ChatGPT
-config["deep_think_llm"] = "caa-gpt-5.4"
-config["quick_think_llm"] = "caa-gpt-5-mini"
-config["max_debate_rounds"] = 2
+config["llm_provider"] = "openai"        # default provider for unlisted roles
+config["deep_think_llm"] = "gpt-5.2"
+config["quick_think_llm"] = "gpt-5-mini"
+
+# Mix providers per role: e.g. Claude as the adversarial critic and the two
+# judges, OpenAI everywhere else. Any role can name any provider/model.
+config["role_llms"] = {
+    "Critic": {"provider": "anthropic", "model": "claude-opus-5"},
+    "Research Manager": {"provider": "anthropic", "model": "claude-opus-5"},
+    "Program Director": {"provider": "anthropic", "model": "claude-opus-5"},
+}
+
+# Web search for the Novelty Analyst (alongside arXiv):
+# "openai" -> Responses API web_search tool; "anthropic" -> Claude server-side search
+config["web_search"] = {"enabled": True, "provider": "openai", "model": None, "max_uses": 3}
 
 ra = ResearchAgentsGraph(debug=True, config=config)
 
