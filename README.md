@@ -112,7 +112,7 @@ Key options in `researchagents/default_config.py`:
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `llm_provider` | `openai` | `openai`, `anthropic`, `google`, `oracle`, ... |
-| `deep_think_llm` | `gpt-5.2` | Default model for the two judges |
+| `deep_think_llm` | `gpt-5.4` | Default model for the two judges |
 | `quick_think_llm` | `gpt-5-mini` | Default model for analysts and debaters |
 | `role_llms` | `{}` | Per-role provider/model overrides (see below) |
 | `web_search` | enabled, `openai` | Web search tool for the Novelty Analyst |
@@ -132,7 +132,7 @@ config["role_llms"] = {
     "Critic":           {"provider": "anthropic", "model": "claude-opus-5"},
     "Research Manager": {"provider": "anthropic", "model": "claude-opus-5"},
     "Program Director": {"provider": "anthropic", "model": "claude-opus-5"},
-    "Novelty Analyst":  {"provider": "openai",    "model": "gpt-5.2"},
+    "Novelty Analyst":  {"provider": "openai",    "model": "gpt-5.4"},
 }
 ```
 
@@ -150,7 +150,7 @@ LLM provider's native search — no separate search-API key needed:
 config["web_search"] = {
     "enabled": True,
     "provider": "openai",     # "openai" (Responses API) or "anthropic" (Claude server-side)
-    "model": None,             # None -> gpt-5.2 / claude-opus-5
+    "model": None,             # None -> gpt-5.4 / claude-opus-5
     "max_uses": 3,             # searches per query (anthropic provider)
 }
 ```
