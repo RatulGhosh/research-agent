@@ -9,8 +9,8 @@ load_dotenv()
 # Create a custom config
 config = DEFAULT_CONFIG.copy()
 config["llm_provider"] = "openai"        # default provider for unlisted roles
-config["deep_think_llm"] = "gpt-5.4"
-config["quick_think_llm"] = "gpt-5-mini"
+config["deep_think_llm"] = "gpt-5.6"
+config["quick_think_llm"] = "gpt-5.6-terra"
 
 # Mix providers per role: e.g. Claude as the adversarial critic and the two
 # judges, OpenAI everywhere else. Any role can name any provider/model.

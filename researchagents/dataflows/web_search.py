@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-DEFAULT_OPENAI_SEARCH_MODEL = "gpt-5.4"
+DEFAULT_OPENAI_SEARCH_MODEL = "gpt-5.6"
 DEFAULT_ANTHROPIC_SEARCH_MODEL = "claude-opus-5"
 
 _PROMPT = (
