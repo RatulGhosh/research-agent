@@ -1,0 +1,29 @@
+[project]
+name = "researchagents"
+version = "0.1.0"
+description = "Multi-agent LLM review board that evaluates research ideas against your compute budget"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "langchain-core>=0.3",
+    "langchain-openai>=0.2",
+    "langgraph>=0.2",
+    "python-dotenv>=1.0",
+    "requests>=2.31",
+    "typing-extensions>=4.9",
+]
+
+[project.optional-dependencies]
+anthropic = ["langchain-anthropic>=0.2"]
+google = ["langchain-google-genai>=2.0"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+researchagents = "cli.main:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = { find = { include = ["researchagents*", "cli*"] } }
