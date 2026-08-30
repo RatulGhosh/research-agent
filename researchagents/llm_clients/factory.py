@@ -25,6 +25,12 @@ def create_llm(
         llm_kwargs = {"model": model, **kwargs}
         if base_url:
             llm_kwargs["base_url"] = base_url
+        if provider_lower == "openai":
+            # GPT-5.x reasoning models reject function tools on the legacy
+            # /v1/chat/completions endpoint; the Responses API supports them.
+            # Only for openai itself — compatible providers (ollama,
+            # openrouter, ...) generally don't implement /v1/responses.
+            llm_kwargs.setdefault("use_responses_api", True)
         return ChatOpenAI(**llm_kwargs)
 
     if provider_lower == "anthropic":
