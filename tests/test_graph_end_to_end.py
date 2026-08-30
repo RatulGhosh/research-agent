@@ -38,11 +38,16 @@ def test_graph_runs_end_to_end():
     ).setup_graph()
 
     state = graph.invoke(
-        create_initial_state("Test a tiny idea.", "- Compute: 1x GPU"),
+        create_initial_state(
+            "Test a tiny idea.",
+            "- Compute: 1x GPU",
+            venue="- Venue: NeurIPS 2027\n- Track: main",
+        ),
         config={"recursion_limit": config["max_recur_limit"]},
     )
 
     # Every stage produced output
+    assert state["venue_report"]
     assert state["novelty_report"]
     assert state["feasibility_report"]
     assert state["impact_report"]
@@ -60,3 +65,22 @@ def test_graph_runs_end_to_end():
     assert "Ambitious Scoper:" in state["scope_debate_state"]["history"]
     assert "Conservative Scoper:" in state["scope_debate_state"]["history"]
     assert "Pragmatic Scoper:" in state["scope_debate_state"]["history"]
+
+
+def test_graph_skips_venue_analyst_without_venue():
+    config = {**DEFAULT_CONFIG, "max_debate_rounds": 1, "max_scope_rounds": 1}
+    llm = FakeLLM()
+    graph = GraphSetup(
+        quick_thinking_llm=llm,
+        deep_thinking_llm=FakeLLM(),
+        tools=[fake_search],
+        config=config,
+    ).setup_graph()
+
+    state = graph.invoke(
+        create_initial_state("Test a tiny idea.", "- Compute: 1x GPU"),
+        config={"recursion_limit": config["max_recur_limit"]},
+    )
+
+    assert state["venue_report"] == ""
+    assert state["final_recommendation"]

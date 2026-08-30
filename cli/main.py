@@ -32,6 +32,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--data", help="Data access, e.g. 'public benchmarks only'")
     parser.add_argument("--budget", help="Money budget, e.g. '$2000 API credits'")
 
+    parser.add_argument(
+        "--venue", help="Target conference/workshop name, e.g. 'NeurIPS 2027'"
+    )
+    parser.add_argument(
+        "--track",
+        help="Target track: main, findings, workshop, industry, demo, short, ...",
+    )
+    parser.add_argument("--venue-url", help="URL of the venue or its call for papers")
+
     parser.add_argument("--provider", default=None, help="LLM provider (default: config)")
     parser.add_argument("--deep-model", default=None, help="Deep-thinking model name")
     parser.add_argument("--quick-model", default=None, help="Quick-thinking model name")
@@ -40,6 +49,17 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--debug", action="store_true", help="Stream progress to stdout")
     return parser
+
+
+def resolve_venue(args) -> str:
+    parts = []
+    if args.venue:
+        parts.append(f"- Venue: {args.venue}")
+    if args.track:
+        parts.append(f"- Track: {args.track}")
+    if args.venue_url:
+        parts.append(f"- URL: {args.venue_url}")
+    return "\n".join(parts)
 
 
 def resolve_resources(args) -> str:
@@ -88,7 +108,7 @@ def main(argv=None) -> int:
         config["max_debate_rounds"] = args.debate_rounds
 
     graph = ResearchAgentsGraph(debug=args.debug, config=config)
-    _, recommendation = graph.propagate(research_idea, resources)
+    _, recommendation = graph.propagate(research_idea, resources, venue=resolve_venue(args))
 
     print("\n" + "=" * 72)
     print("FINAL RECOMMENDATION")

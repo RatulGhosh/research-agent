@@ -11,7 +11,10 @@ problem and a staged resource plan.
 
 ```
                           ┌─────────────────────┐
-        arXiv search ───► │   Novelty Analyst   │
+         web search ───►  │   Venue Analyst     │  (optional: CFP, deadlines, track bar)
+                          └─────────┬───────────┘
+                          ┌─────────▼───────────┐
+ arXiv + web search ───►  │   Novelty Analyst   │
                           └─────────┬───────────┘
                           ┌─────────▼───────────┐
                           │ Feasibility Analyst │  (against your GPU/time budget)
@@ -36,6 +39,11 @@ problem and a staged resource plan.
                           └─────────────────────┘
 ```
 
+- **Venue Analyst** (runs only when you give a target venue) web-searches the
+  conference/workshop CFP, deadlines, scope, and the named track's acceptance
+  bar (main vs. findings vs. workshop vs. industry differ a lot), and its
+  report informs every downstream agent — from the Impact Analyst's fit
+  assessment to the Program Director's deadline-aligned execution plan.
 - **Analysts** produce structured reports. The Novelty Analyst grounds its
   assessment in real literature via two tools: live arXiv search (no API key
   required) and provider-native web search (OpenAI's Responses API `web_search`
@@ -77,6 +85,7 @@ python -m cli.main \
   --time "4 months to conference deadline" \
   --team "1 PhD student full-time" \
   --budget "\$2000 API credits" \
+  --venue "EMNLP 2027" --track findings --venue-url https://2027.emnlp.org \
   --debug
 ```
 
@@ -99,6 +108,7 @@ ra = ResearchAgentsGraph(debug=True, config=config)
 state, recommendation = ra.propagate(
     research_idea="...",
     resources="- Compute: 4x A100 80GB\n- Time: 4 months\n- Team: 1 PhD student",
+    venue="- Venue: EMNLP 2027\n- Track: findings\n- URL: https://2027.emnlp.org",  # optional
 )
 print(recommendation)
 ```
@@ -119,11 +129,12 @@ Key options in `researchagents/default_config.py`:
 | `max_debate_rounds` | `5` | Advocate/critic back-and-forth rounds |
 | `max_scope_rounds` | `3` | Scoping-team rounds |
 | `max_lit_search_calls` | `10` | Search tool-call budget for the Novelty Analyst |
+| `max_venue_search_calls` | `4` | Search tool-call budget for the Venue Analyst |
 | `results_dir` | `~/.researchagents/results` | Where reports are written |
 
 ### Per-role LLMs
 
-Any of the eleven roles can run on its own provider and model. Roles not
+Any of the twelve roles can run on its own provider and model. Roles not
 listed fall back to `deep_think_llm` (Research Manager, Program Director) or
 `quick_think_llm` (everyone else):
 
@@ -136,10 +147,22 @@ config["role_llms"] = {
 }
 ```
 
-Valid role names: `Novelty Analyst`, `Feasibility Analyst`, `Impact Analyst`,
+Valid role names: `Venue Analyst`, `Novelty Analyst`, `Feasibility Analyst`, `Impact Analyst`,
 `Methodology Analyst`, `Advocate`, `Critic`, `Research Manager`,
 `Ambitious Scoper`, `Conservative Scoper`, `Pragmatic Scoper`,
 `Program Director`. Identical provider/model specs share one client instance.
+
+### Target venue
+
+Optionally name where you plan to submit — conference or workshop, track
+(`main`, `findings`, `workshop`, `industry`, `demo`, `short`, ...), and URL.
+A Venue Analyst then researches the CFP via web search and the whole board
+evaluates against that venue: deadline realism, track-appropriate result
+strength, and scope fit. Omit it and the board suggests venues instead.
+
+```bash
+--venue "EMNLP 2027" --track findings --venue-url https://2027.emnlp.org
+```
 
 ### Web search
 

@@ -1,9 +1,14 @@
+from researchagents.agents.utils.context import format_venue_context
+
+
 def create_research_manager(llm):
     """Judges the advocate/critic debate and drafts the refined research problem."""
 
     def research_manager_node(state) -> dict:
         debate_state = state["proposal_debate_state"]
         history = debate_state.get("history", "")
+
+        venue_context = format_venue_context(state)
 
         prompt = f"""You are the Research Manager chairing a research review board. The Advocate and Critic have finished debating the proposed idea in light of the analyst reports. Your job is to weigh the debate on its merits and produce a refined version of the research problem that keeps the defensible core and fixes what the Critic legitimately broke. Do not default to a middle position — side with whoever argued better on each specific point.
 
@@ -12,7 +17,7 @@ Proposed research idea:
 
 Available resources:
 {state["resources"]}
-
+{venue_context}
 Analyst reports:
 Novelty: {state.get("novelty_report", "")}
 Feasibility: {state.get("feasibility_report", "")}

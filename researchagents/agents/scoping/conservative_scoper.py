@@ -1,3 +1,6 @@
+from researchagents.agents.utils.context import format_venue_context
+
+
 def create_conservative_scoper(llm):
     """Argues for the minimal scope that protects the resource budget."""
 
@@ -8,6 +11,8 @@ def create_conservative_scoper(llm):
         current_ambitious = scope_state.get("current_ambitious_response", "")
         current_pragmatic = scope_state.get("current_pragmatic_response", "")
 
+        venue_context = format_venue_context(state)
+
         prompt = f"""You are the Conservative Scoper on a research review board. The refined research problem is settled; the question now is how big to make the project. You argue for the smallest scope that still tests the core hypothesis: minimum viable experiments first, spend nothing on the full matrix until the pilot proves the effect exists. Most research projects fail by burning their budget before learning whether the core idea works.
 
 Refined research problem:
@@ -15,7 +20,7 @@ Refined research problem:
 
 Available resources:
 {state["resources"]}
-
+{venue_context}
 Feasibility report: {state.get("feasibility_report", "")}
 Methodology report: {state.get("methodology_report", "")}
 

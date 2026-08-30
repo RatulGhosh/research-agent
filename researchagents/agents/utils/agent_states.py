@@ -31,10 +31,14 @@ class ScopeDebateState(TypedDict):
 class AgentState(MessagesState):
     research_idea: Annotated[str, "High-level research idea under evaluation"]
     resources: Annotated[str, "Available resources: GPUs, time, data, people, budget"]
+    target_venue: Annotated[
+        str, "Target venue: conference/workshop name, URL, and track (main, findings, ...)"
+    ]
 
     sender: Annotated[str, "Agent that sent the last message"]
 
     # analyst reports
+    venue_report: Annotated[str, "Venue/CFP research from the Venue Analyst"]
     novelty_report: Annotated[str, "Literature/novelty assessment from the Novelty Analyst"]
     feasibility_report: Annotated[str, "Compute/resource feasibility assessment"]
     impact_report: Annotated[str, "Scientific and practical impact assessment"]

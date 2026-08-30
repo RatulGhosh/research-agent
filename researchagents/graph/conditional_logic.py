@@ -8,6 +8,13 @@ class ConditionalLogic:
         self.max_debate_rounds = max_debate_rounds
         self.max_scope_rounds = max_scope_rounds
 
+    def should_continue_venue(self, state: AgentState) -> str:
+        """Route the venue analyst's tool-calling loop."""
+        last_message = state["messages"][-1]
+        if getattr(last_message, "tool_calls", None):
+            return "tools_venue"
+        return "Msg Clear Venue"
+
     def should_continue_novelty(self, state: AgentState) -> str:
         """Route the novelty analyst's tool-calling loop."""
         last_message = state["messages"][-1]

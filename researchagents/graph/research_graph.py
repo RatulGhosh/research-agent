@@ -16,6 +16,7 @@ from .setup import GraphSetup
 # Which default tier each graph node falls back to when it has no entry in
 # config["role_llms"]. The two judges get the deep-thinking model.
 ROLE_TIERS = {
+    "Venue Analyst": "quick",
     "Novelty Analyst": "quick",
     "Feasibility Analyst": "quick",
     "Impact Analyst": "quick",
@@ -30,7 +31,7 @@ ROLE_TIERS = {
 }
 
 
-def create_initial_state(research_idea: str, resources: str) -> Dict:
+def create_initial_state(research_idea: str, resources: str, venue: str = "") -> Dict:
     """Build the initial graph state for a review run."""
     return {
         "messages": [
@@ -38,6 +39,8 @@ def create_initial_state(research_idea: str, resources: str) -> Dict:
         ],
         "research_idea": research_idea,
         "resources": resources,
+        "target_venue": venue or "",
+        "venue_report": "",
         "novelty_report": "",
         "feasibility_report": "",
         "impact_report": "",
@@ -168,18 +171,22 @@ class ResearchAgentsGraph:
 
         return tools
 
-    def propagate(self, research_idea: str, resources: str) -> Tuple[Dict, str]:
+    def propagate(
+        self, research_idea: str, resources: str, venue: str = ""
+    ) -> Tuple[Dict, str]:
         """Evaluate a research idea against the available resources.
 
         Args:
             research_idea: High-level description of the proposed research.
             resources: Description of available resources (GPUs, time, data,
                 team, budget).
+            venue: Optional target venue description — conference/workshop
+                name, URL, and track (main, findings, workshop, industry, ...).
 
         Returns:
             Tuple of (final graph state, final recommendation text).
         """
-        initial_state = create_initial_state(research_idea, resources)
+        initial_state = create_initial_state(research_idea, resources, venue)
 
         args = {"recursion_limit": self.config["max_recur_limit"]}
 
@@ -207,6 +214,8 @@ class ResearchAgentsGraph:
                 f"# Research Review Board Report\n\nGenerated: {datetime.now().isoformat()}",
                 f"## Research Idea\n\n{state['research_idea']}",
                 f"## Declared Resources\n\n{state['resources']}",
+                f"## Target Venue\n\n{state.get('target_venue') or '(none specified)'}",
+                f"## Venue Report\n\n{state.get('venue_report') or '(no venue research)'}",
                 f"## Novelty Report\n\n{state['novelty_report']}",
                 f"## Feasibility Report\n\n{state['feasibility_report']}",
                 f"## Impact Report\n\n{state['impact_report']}",
@@ -228,6 +237,7 @@ class ResearchAgentsGraph:
                 {
                     "research_idea": state["research_idea"],
                     "resources": state["resources"],
+                    "target_venue": state.get("target_venue", ""),
                     "refined_proposal": state["refined_proposal"],
                     "final_recommendation": state["final_recommendation"],
                 },

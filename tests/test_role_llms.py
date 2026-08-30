@@ -83,6 +83,7 @@ def test_graph_setup_uses_override_for_node():
 
 def test_role_tiers_cover_all_graph_nodes():
     assert set(ROLE_TIERS) == {
+        "Venue Analyst",
         "Novelty Analyst",
         "Feasibility Analyst",
         "Impact Analyst",

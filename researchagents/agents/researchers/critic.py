@@ -1,3 +1,6 @@
+from researchagents.agents.utils.context import format_venue_context
+
+
 def create_critic(llm):
     """Argues against pursuing the idea as posed, stress-testing every claim."""
 
@@ -6,6 +9,8 @@ def create_critic(llm):
         history = debate_state.get("history", "")
         critic_history = debate_state.get("critic_history", "")
         current_response = debate_state.get("current_response", "")
+
+        venue_context = format_venue_context(state)
 
         prompt = f"""You are the Critic on a research review board, stress-testing this research idea. Your job is to find the reasons this project would fail, waste the resource budget, or produce an unpublishable result — before real time and GPUs are spent on it.
 
@@ -21,7 +26,7 @@ Proposed research idea:
 
 Available resources:
 {state["resources"]}
-
+{venue_context}
 Novelty report: {state.get("novelty_report", "")}
 Feasibility report: {state.get("feasibility_report", "")}
 Impact report: {state.get("impact_report", "")}

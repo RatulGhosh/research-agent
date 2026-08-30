@@ -44,4 +44,5 @@ DEFAULT_CONFIG = {
     # Literature search
     "arxiv_max_results": 20,       # results returned per arXiv query
     "max_lit_search_calls": 10,    # tool-call budget for the novelty analyst
+    "max_venue_search_calls": 4,   # tool-call budget for the venue analyst
 }

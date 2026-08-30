@@ -1,3 +1,6 @@
+from researchagents.agents.utils.context import format_venue_context
+
+
 def create_advocate(llm):
     """Argues for pursuing the research idea, engaging the critic's points."""
 
@@ -6,6 +9,8 @@ def create_advocate(llm):
         history = debate_state.get("history", "")
         advocate_history = debate_state.get("advocate_history", "")
         current_response = debate_state.get("current_response", "")
+
+        venue_context = format_venue_context(state)
 
         prompt = f"""You are the Advocate on a research review board, arguing that this research idea is worth pursuing. Build a strong, evidence-based case grounded in the analyst reports, and directly rebut the Critic's latest points.
 
@@ -20,7 +25,7 @@ Proposed research idea:
 
 Available resources:
 {state["resources"]}
-
+{venue_context}
 Novelty report: {state.get("novelty_report", "")}
 Feasibility report: {state.get("feasibility_report", "")}
 Impact report: {state.get("impact_report", "")}

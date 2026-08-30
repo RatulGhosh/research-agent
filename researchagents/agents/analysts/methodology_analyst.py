@@ -1,3 +1,6 @@
+from researchagents.agents.utils.context import format_venue_context
+
+
 def create_methodology_analyst(llm):
     """Sketches the experimental design and probes its weak points."""
 
@@ -6,6 +9,7 @@ def create_methodology_analyst(llm):
         resources = state["resources"]
         novelty_report = state.get("novelty_report", "")
         feasibility_report = state.get("feasibility_report", "")
+        venue_context = format_venue_context(state)
 
         prompt = f"""You are a Methodology Analyst on a research review board. Your job is to sketch how the proposed research would actually be tested, and to find the methodological weak points before a reviewer does.
 
@@ -20,13 +24,13 @@ Novelty analyst's literature survey:
 
 Feasibility analyst's report:
 {feasibility_report}
-
+{venue_context}
 Write a report in Markdown covering:
 - Core hypothesis: state the idea as one or more falsifiable hypotheses.
 - Experimental design: datasets, baselines, metrics, and the key comparisons needed to support each hypothesis.
 - Confounds and threats to validity: what could make results look good without the hypothesis being true, and how to control for it.
 - Ablations: which components must be ablated for the claims to be credible.
-- Statistical rigor: seeds, variance reporting, significance — what this area's reviewers expect.
+- Statistical rigor: seeds, variance reporting, significance — what this area's reviewers (at the target venue/track, if specified) expect.
 - Anticipated reviewer objections: the three hardest questions a skeptical reviewer would ask, and whether the design can answer them.
 - A rigor rating for the idea as posed: WEAK / ADEQUATE / STRONG, with justification.
 

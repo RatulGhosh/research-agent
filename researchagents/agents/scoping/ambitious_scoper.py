@@ -1,3 +1,6 @@
+from researchagents.agents.utils.context import format_venue_context
+
+
 def create_ambitious_scoper(llm):
     """Argues for the biggest defensible version of the refined proposal."""
 
@@ -8,6 +11,8 @@ def create_ambitious_scoper(llm):
         current_conservative = scope_state.get("current_conservative_response", "")
         current_pragmatic = scope_state.get("current_pragmatic_response", "")
 
+        venue_context = format_venue_context(state)
+
         prompt = f"""You are the Ambitious Scoper on a research review board. The refined research problem is settled; the question now is how big to make the project. You argue for the most ambitious defensible scope: aim for the top venue, the strongest claims, the full experimental matrix. Small, safe projects produce forgettable papers — if the resources can plausibly support the big version, fight for it.
 
 Refined research problem:
@@ -15,7 +20,7 @@ Refined research problem:
 
 Available resources:
 {state["resources"]}
-
+{venue_context}
 Feasibility report: {state.get("feasibility_report", "")}
 Methodology report: {state.get("methodology_report", "")}
 

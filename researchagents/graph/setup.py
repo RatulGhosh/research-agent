@@ -1,3 +1,4 @@
+from langchain_core.messages import RemoveMessage
 from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 
@@ -5,6 +6,7 @@ from researchagents.agents.analysts.feasibility_analyst import create_feasibilit
 from researchagents.agents.analysts.impact_analyst import create_impact_analyst
 from researchagents.agents.analysts.methodology_analyst import create_methodology_analyst
 from researchagents.agents.analysts.novelty_analyst import create_novelty_analyst
+from researchagents.agents.analysts.venue_analyst import create_venue_analyst
 from researchagents.agents.managers.program_director import create_program_director
 from researchagents.agents.managers.research_manager import create_research_manager
 from researchagents.agents.researchers.advocate import create_advocate
@@ -14,6 +16,11 @@ from researchagents.agents.scoping.conservative_scoper import create_conservativ
 from researchagents.agents.scoping.pragmatic_scoper import create_pragmatic_scoper
 from researchagents.agents.utils.agent_states import AgentState
 from researchagents.graph.conditional_logic import ConditionalLogic
+
+
+def clear_messages(state):
+    """Wipe the tool-loop conversation so the next analyst starts fresh."""
+    return {"messages": [RemoveMessage(id=m.id) for m in state["messages"]]}
 
 
 class GraphSetup:
@@ -39,6 +46,18 @@ class GraphSetup:
 
     def setup_graph(self):
         workflow = StateGraph(AgentState)
+
+        # Venue research (skipped when no target venue is given)
+        workflow.add_node(
+            "Venue Analyst",
+            create_venue_analyst(
+                self._llm("Venue Analyst"),
+                self.tools,
+                max_search_calls=self.config["max_venue_search_calls"],
+            ),
+        )
+        workflow.add_node("tools_venue", ToolNode(self.tools))
+        workflow.add_node("Msg Clear Venue", clear_messages)
 
         # Analysts
         workflow.add_node(
@@ -76,7 +95,14 @@ class GraphSetup:
         )
 
         # Edges
-        workflow.add_edge(START, "Novelty Analyst")
+        workflow.add_edge(START, "Venue Analyst")
+        workflow.add_conditional_edges(
+            "Venue Analyst",
+            self.conditional_logic.should_continue_venue,
+            ["tools_venue", "Msg Clear Venue"],
+        )
+        workflow.add_edge("tools_venue", "Venue Analyst")
+        workflow.add_edge("Msg Clear Venue", "Novelty Analyst")
         workflow.add_conditional_edges(
             "Novelty Analyst",
             self.conditional_logic.should_continue_novelty,

@@ -41,5 +41,13 @@ resources = """
 - Timeline: aiming for a top ML conference deadline in ~4 months
 """
 
-_, recommendation = ra.propagate(research_idea, resources)
+# Optional: target venue/track — a Venue Analyst web-searches the CFP,
+# deadlines, and track-specific acceptance bar, and the whole board uses it.
+venue = """
+- Venue: EMNLP 2027
+- Track: findings
+- URL: https://2027.emnlp.org
+"""
+
+_, recommendation = ra.propagate(research_idea, resources, venue=venue)
 print(recommendation)

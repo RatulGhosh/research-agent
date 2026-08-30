@@ -1,3 +1,6 @@
+from researchagents.agents.utils.context import format_venue_context
+
+
 def create_pragmatic_scoper(llm):
     """Argues for a staged scope balancing ambition against the budget."""
 
@@ -8,6 +11,8 @@ def create_pragmatic_scoper(llm):
         current_ambitious = scope_state.get("current_ambitious_response", "")
         current_conservative = scope_state.get("current_conservative_response", "")
 
+        venue_context = format_venue_context(state)
+
         prompt = f"""You are the Pragmatic Scoper on a research review board. The refined research problem is settled; the question now is how big to make the project. You argue for a staged plan: a cheap pilot with explicit go/no-go criteria, then scale into the ambitious experiments only on a positive signal. Challenge both extremes — the Ambitious Scoper's budget optimism and the Conservative Scoper's tendency to descope the project below publishability.
 
 Refined research problem:
@@ -15,7 +20,7 @@ Refined research problem:
 
 Available resources:
 {state["resources"]}
-
+{venue_context}
 Feasibility report: {state.get("feasibility_report", "")}
 Methodology report: {state.get("methodology_report", "")}
 
